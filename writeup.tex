@@ -12,12 +12,18 @@
 
 \maketitle
 
+\newpage
+
 \section{Letter to the Editor}
 In addition to this report, write a one-page letter to the newspaper chief editor, explaining the main results of
 the report and suggesting findings that can be communicated with the basketball fans reading the newspaper.
 
+\newpage
+
 \section{Overview}
 Describe the problem, your model, results and how your model performed.
+
+\newpage
 
 \section{Introduction}
 % ``Rephrase the problem
@@ -25,7 +31,7 @@ Describe the problem, your model, results and how your model performed.
 
 People love sports because they are a showcase of hard work and talent. People also love sports because they are unpredictable. How do we quantify the effect of one versus the other in a basketball game? On the one hand, we often see this framed as a strict dichotomy between luck and skill: sports outcomes depend in some part on one and in some part on the other. However, careful examination reveals that it is rather unclear where to draw the line between luck and skill. For example, if a team happens to study exactly the right film the night before a big game and is able to perfectly foil the other team's plans, is that luck or is it skill? On the one hand, it certaintly takes skill to study your opponent and use this information to your advantage. On the other hand, they could have easily picked the wrong film to study! Instead, we would like to approach this problem using a dichotomy between certainty and uncertainty.  This also addresses the issue of a lack of data; there are many aspects of ``skill'' (such as individual player records) which require more data than we have been able to gather so far.
 
-Our goal here is twofold: first develop a model which predicts the outcome of a basketball, and second quantify the effect of luck/uncertainty in a basketball game. Since we want to incorporate the effect of uncertainty, our prediction model will contain a stochastic element which we will have to derive. However, we will also discuss additional markers of uncertainty in our data to better understand the effect of uncertainty on a basketball game in a more general sense. 
+Our goal here is twofold: first develop a model which predicts the outcome of a basketball game, and second quantify the effect of luck/uncertainty in a basketball game. Since we want to incorporate the effect of uncertainty, our prediction model will contain a stochastic element which we will have to derive. To train our model, we will use data from the regular season games leading up to the 2024 March Madness Tournament, and then test our model's ability to predict the outcome of the tournament. However, we will also discuss additional markers of uncertainty in our data to better understand the effect of uncertainty on a basketball game in a more general sense. 
 
 
 \section{Methods}
@@ -44,30 +50,33 @@ Our model will be a modified version of the classic Elo ranking in chess, which 
 
 
 \subsection{Our ``Elo'' Ranking}
-Traditionally (see~\cite{mediumRatingSystem}), a player's Elo ranking is updated after each game based on the following formula:
+Traditionally (see~\cite{mediumRatingSystem}), the Elo ranking system first calculates an expected score for the game as a function of the difference in the two teams' Elo ratings. Here, $E$ is the ``main'' team while $E_{opp}$ is the opposing team:
 
 \[
+E = \frac{1}{1+10^{\gamma_{opp}-\gamma}/c}
 \]
 
-This is essentially performing a stochastic gradient descent for a logistic regression model, where the Elo ratings are the weights of the model~\cite{stmorseStatisticalLearning}. 
-However, this score does not take into account the score 
-
-The Elo score after a team's $n+1^{\text{th}}$ game is given by
+where $\gamma_n$ is the main team's pre-game Elo score (after game $n$), $\gamma_{opp}$ is the opposing team's pre-game Elo score, and $c, K > 0$ are constants. The main team's Elo rating is updated after their $n+1^{\text{th}}$ game based on the following formula:
 
 \[
-\gamma_{n+1} = \gamma_n + \alpha\frac{\gamma^{opp}_n}{\gamma_n}\frac{S_{\text{winner}}}{S_{\text{loser}}}
-\]
+\gamma_{n+1} = \gamma_n + K*(O - E)\]
+
+Where $O$ is 1 if the team wins and 0 if the team loses. This is essentially performing a stochastic gradient descent (taking a step after each game) for a logistic regression model, where the Elo ratings are the weights of the model~\cite{stmorseStatisticalLearning}.
+
+However, this score update does not take into account the score differential of the outcome of the game. Thus we propose a modified Elo system which uses the score outcomes to update a team's Elo score as follows: 
+
 \[
-\gamma_{n+1} = \gamma_n - \alpha\frac{\gamma_n}{\gamma^{opp}_n}\frac{S_{\text{winner}}}{S_{\text{loser}}}
+\gamma_{n+1} = \gamma_n + K^{\frac{S_{\text{win}}}{S_{\text{lose}}}}(O - E)
 \]
 
-where $\gamma_n$ is the team's current Elo score (after week $n$), $\gamma^{opp}_n$ is the opposing team's current Elo score, $\alpha > 0$ is a weight parameter, and $S_{\text{winner}}$, $S_{\text{loser}}$ are the scores of the winner/loser.
+where $S_{\text{win}}$, $S_{\text{lose}}$ are the scores of the winner/loser and the other variables are defined as above. We will calculate $E$ in the same way setting $c$ to the canonical 400 for simplicity, and choose $K$ based on considerations described in the next section near a canonical value  of $K\approx 32$~\cite{mediumRatingSystem}.
+
+We considered several other 
 
 
+% We assume that the effect of a homefield advantage is significant, and that it is approximately captured by the average win/loss ratio of home vs away games.
 
 
-We assume that the effect of a homefield advantage is significant, and that it is approximately captured by the average win/loss ratio of home vs away games.
-% Jake?
 \subsection{Bootstrapping}
 We would now like to verify the accuracy of our Elo system. To do this, we ``bootstrap'' \cite{builtinWhatBootstrapping} samples from the regular season games to compare our model's predictions of the probability of an upset to the actual probability of an upset for a given difference in Elo rankings. If our Elo ratings are accurate, we should see these are close to one another.
 
@@ -112,10 +121,16 @@ We would like to see how well our model could have predicted the results of the 
 % Will require you to get results of the 2024 torunament, which I guess you could just do by hand?
 % If this ends up being we NEVER correctly predict it, we could maybe just quantify HOW GOOD we were on average like how many games we predicted correctly.
 
-Of course, due to the uncertainty everyone acknowleges exists, this percentage would be low no matter what. After all, no one has ever correctly guessed the result of the tournament~\cite{cbsnewsAnyoneEver}. However, we note that our model (on average) performed better than chance (which would be $(1/2)^{62} \approx 2.17 * 10^{-19}$).
+Of course, due to the uncertainty everyone acknowleges exists, this percentage would be low no matter what. After all, no one has ever correctly guessed the result of the tournament~\cite{cbsnewsAnyoneEver}. However, we note that our model (on average) performed better than just picking the winner as the one with the better record.
 
 \section{Next Steps}
-There are several things we would have liked to check if we had had more time. For one, it would be interesting to explore the effect of overfitting by the choice of $K$. That is, does the value of $K$ which minimized the MSE for the bootstrapping verification also maximize the likelihood of predicting the actual outcome of the tournament? If not, then we should likely look into a different way of picking $K$ (perhaps one which incorporates past data) as this choice seems to have lead to overfitting on the regular season games. 
+There are several things we would have liked to check if we had had more time. For one, it would be interesting to explore the effect of overfitting by the choice of $K$. That is, does the value of $K$ which minimized the MSE for the bootstrapping verification also maximize the likelihood of predicting the actual outcome of the tournament? If not, then we should likely look into a different way of picking $K$ (perhaps one which incorporates past data) as this choice seems to have lead to overfitting on the regular season games.
+
+\subsection{Additional Data}
+\begin{itemize}
+    \item We would have liked to incorporate the homefield advantage in the expected score calculated from the Elo system. If we had had this data, we would have added some number $A$ from the expected score of the home team and subtracted it from the expected score of the away team. For example, if we found that home teams on average win 53\% of games, then we would add/subtract $A=0.03$. This way, the expected score of two teams with the same Elo score would be $0.5 \pm 0.03$. 
+    \item To pick the $K$ that minimizes the MSE for our Elo system compared to the bootstrapped estimate, we could use data from past seasons.
+\end{itemize}
 
 \bibliographystyle{plain}
 \bibliography{bibliography}
