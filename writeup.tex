@@ -10,7 +10,35 @@
 
 \maketitle
 
+\section{Letter to the Editor}
+In addition to this report, write a one-page letter to the newspaper chief editor, explaining the main results of
+the report and suggesting findings that can be communicated with the basketball fans reading the newspaper.
+
+\section{Overview}
+Describe the problem, your model, results and how your model performed.
+
 \section{Introduction}
+Rephrase the problem
+Problems are open-ended and there are many ways to interpret and address them. Explain how you approached the problem.
+
+\section{Methods}
+Explain your model
+Clearly state and justify ALL assumptions your model uses
+Motivate your model. Why did you choose your approach?
+Clearly describe your model
+Clearly define all variables
+Include tables and figures to make it easier to understand
+Analyze your model
+What are the strengths and weaknesses of your model?
+How could you test your model? How stable are the results to noise? 
+If you had more time, how would you expand/improve your model?
+
+\subsection{Our ``Elo'' Ranking}
+Traditionally, a player's Elo ranking is updated after each game based on the following formula:
+
+\[
+\]
+
 
 The Elo score after a team's $n+1^{\text{th}}$ game is given by
 
@@ -22,20 +50,17 @@ The Elo score after a team's $n+1^{\text{th}}$ game is given by
 \]
 
 where $\gamma_n$ is the team's current Elo score (after week $n$), $\gamma^{opp}_n$ is the opposing team's current Elo score, $\alpha > 0$ is a weight parameter, and $S_{\text{winner}}$, $S_{\text{loser}}$ are the scores of the winner/loser.
+\subsection{Weaknesses}
 
-\section{Other Options}
+\subsection{Rejected Ideas}
 
-$\delta_n$:
-\begin{itemize}
-    \item Could also be this team's score minus the other team's score. This way it's positive for wins causing more of an upward change, and negative for losses causing more of a downward change.
-\end{itemize}
+\section{Results}
+What does your model say about the question you have been given?
 
-$\gamma^{opp}_n/\gamma_n$:
-\begin{itemize}
-    \item Could also do $|\gamma^{opp}_n - \gamma_n|$
-\end{itemize}
+\section{Next Steps}
+When updating our ``Elo'' scores, we had an artbitrary parameter $\alpha$. If we had more time, we would have liked to rerun the experiment with a range of $\alpha$ and see if we obtained similar results.
 
-
- 
+\bibliographystyle{plain}
+\bibliography{bibliography}
 
 \end{document}
