@@ -112,7 +112,7 @@ We would like to see how well our model could have predicted the results of the 
 % Will require you to get results of the 2024 torunament, which I guess you could just do by hand?
 % If this ends up being we NEVER correctly predict it, we could maybe just quantify HOW GOOD we were on average like how many games we predicted correctly.
 
-Of course, due to the uncertainty everyone acknowleges exists, this percentage would be low no matter what. After all, no one has ever correctly guessed the result of the tournament~\cite{cbsnewsAnyoneEver}. However, we note that our model (on average) performed better than chance (which would be $(1/2)^62 \approx 2.17 * 10^{-19}$).
+Of course, due to the uncertainty everyone acknowleges exists, this percentage would be low no matter what. After all, no one has ever correctly guessed the result of the tournament~\cite{cbsnewsAnyoneEver}. However, we note that our model (on average) performed better than chance (which would be $(1/2)^{62} \approx 2.17 * 10^{-19}$).
 
 \section{Next Steps}
 There are several things we would have liked to check if we had had more time. For one, it would be interesting to explore the effect of overfitting by the choice of $K$. That is, does the value of $K$ which minimized the MSE for the bootstrapping verification also maximize the likelihood of predicting the actual outcome of the tournament? If not, then we should likely look into a different way of picking $K$ (perhaps one which incorporates past data) as this choice seems to have lead to overfitting on the regular season games. 
