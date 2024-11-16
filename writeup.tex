@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath}
+
+\title{Luck vs Skill in College Basketball}
+\author{Jake Browning, Rohan Mawalkar, Seth Peacock}
+\date{November 2024}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+The Elo score after a team's $n+1^{\text{th}}$ game is given by
+
+\[
+\gamma_{n+1} = \gamma_n + \alpha\frac{\gamma^{opp}_n}{\gamma_n}\frac{S_{\text{winner}}}{S_{\text{loser}}}
+\]
+\[
+\gamma_{n+1} = \gamma_n - \alpha\frac{\gamma_n}{\gamma^{opp}_n}\frac{S_{\text{winner}}}{S_{\text{loser}}}
+\]
+
+where $\gamma_n$ is the team's current Elo score (after week $n$), $\gamma^{opp}_n$ is the opposing team's current Elo score, $\alpha > 0$ is a weight parameter, and $S_{\text{winner}}$, $S_{\text{loser}}$ are the scores of the winner/loser.
+
+\section{Other Options}
+
+$\delta_n$:
+\begin{itemize}
+    \item Could also be this team's score minus the other team's score. This way it's positive for wins causing more of an upward change, and negative for losses causing more of a downward change.
+\end{itemize}
+
+$\gamma^{opp}_n/\gamma_n$:
+\begin{itemize}
+    \item Could also do $|\gamma^{opp}_n - \gamma_n|$
+\end{itemize}
+
+
+ 
+
+
+
+\end{document}
