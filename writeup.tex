@@ -5,7 +5,7 @@
 \usepackage{amsmath}
 
 \title{Luck vs Skill in College Basketball}
-\author{Jake Browning, Rohan Mawalkar, Seth Peacock}
+\author{Seth Peacock, Jake Browning, Rohan Mawalkar}
 \date{November 2024}
 
 \begin{document}
@@ -17,6 +17,8 @@
 \section{Letter to the Editor}
 In addition to this report, write a one-page letter to the newspaper chief editor, explaining the main results of
 the report and suggesting findings that can be communicated with the basketball fans reading the newspaper.
+
+The bottom line is that the tournament is just too uncertain to expect to be able to predict. But we have come up with a model that can at least tell you what tournaments like this one would look like in similar situations.
 
 \newpage
 
@@ -97,16 +99,12 @@ We start all teams at the same Elo rating. This is typically a high positive val
 
 After all of the games have created updates, we now have the Elo rating for every team that made it to the tournament. At this point, we will throw out the other teams that didn't make it to the tournament, as their Elo ratings are less meaningful due to the small numbers of games.
 
-\subsection{Bootstrapping}\label{bootstrap}
-We would like to verify the accuracy of our Elo system. To do this, we ``bootstrap''~\cite{builtinWhatBootstrapping} samples from the regular season games to compare our model's predictions of the probability of an upset to the actual observed probability of an upset for a given difference in Elo rankings. Let $E_u(\Delta_{\text{Elo}})$ be the former probability and $\hat{p}_u(\Delta_{\text{Elo}})$ the latter, where $\Delta_{\text{Elo}}$ is the difference in (final) Elo ratings between the two teams. If our Elo ratings are accurate, we should see these are close to one another. 
+\subsection{Verifying Elo Rankings}\label{verify}
+We would like to verify the accuracy of our Elo system. To do this, we go back to the samples from the regular season games to compare our model's predictions of the probability of an upset to the actual observed probability of an upset for a given difference in Elo rankings. Let $E_u(\Delta_{\text{Elo}})$ be the former probability and $\hat{p}_u(\Delta_{\text{Elo}})$ the latter, where $\Delta_{\text{Elo}}$ is the difference in (final) Elo ratings between the two teams. If our Elo ratings are accurate, we should see these are close to one another. 
 
-First, we find the minimum and maximum differences in (final) Elo rankings for all of the games played. We then divvy this up into equal parts, as small as we can but with each partition large enough to contain a significant portion of the games. See JAKE INSERT FIG for a histogram of how many games fall into the partitions we chose. For each partition, we then calculate $E_u(\Delta_{\text{Elo}})$ via \autoref{eq:E} using the middle $\Delta_{\text{Elo}}$ for that partition. Let $N$ be the number of games played in the regular season. We then sample with replacement $N$ times from the subset of games that falls into that partition. To calculate $\hat{p}_u(\Delta_{\text{Elo}})$, we simply take the number of upsets (lower Elo rating team wins) divided by $N$. This is the maximum likelihood estimate (MLE) for the probability of an upset in the given partition~\cite{statproofbookMaximumLikelihood}.
+First, we find the minimum and maximum differences in (final) Elo rankings for all of the games played. We then divvy this up into equal parts, as small as we can but with each partition large enough to contain a significant portion of the games. See JAKE INSERT FIG for a histogram of how many games fall into the partitions we chose. For each partition, we then calculate $E_u(\Delta_{\text{Elo}})$ via \autoref{eq:E} using the middle $\Delta_{\text{Elo}}$ for that partition. Let $N_i$ be the number of games played in the regular season. To calculate $\hat{p}_u(\Delta_{\text{Elo}})$, we simply take the number of upsets (lower Elo rating team wins) divided by $N_i$. This is the maximum likelihood estimate (MLE) for the probability of an upset in the given partition~\cite{statproofbookMaximumLikelihood}.
 
-
-% Note that the probability of an upset obtained via bootstrapping $\hat{p}_u(\Delta_{\text{Elo}})$ could be anything between 0 and 1, while the expected outcome probability from Elo rankings is necessarily between 0 and 1/2. However, we expect that $\hat{p}_u(\Delta_{\text{Elo}})$ should be roughly less than 0 to 1/2, for the same reasons that we hope our Elo expected outcomes $E_u(\Delta_{\text{Elo}})$ are similar to $\hat{p}_u(\Delta_{\text{Elo}})$ for each value of $(\Delta_{\text{Elo}})$. 
-
-
-To quantify the accuracy of our Elo system, we first plot the Elo predicted upset probability $E_u(\Delta_{\text{Elo}})$ against the observed bootstrapped probability $\hat{p}_u(\Delta_{\text{Elo}})$ for each value of $\Delta_{\text{Elo}}$. We then plot the $y=x$ line and calculate the MSE of these points with respect to this diagonal line. That is, we calculate the straight line distance from each point in 2D space to the $y=x$ line~\cite{enwiki:1235411332}:
+To quantify the accuracy of our Elo system, we first plot the Elo predicted upset probability $E_u(\Delta_{\text{Elo}})$ against the observed probability MLE $\hat{p}_u(\Delta_{\text{Elo}})$ for each value of $\Delta_{\text{Elo}}$. We then plot the $y=x$ line and calculate the MSE of these points with respect to this diagonal line. That is, we calculate the straight line distance from each point in 2D space to the $y=x$ line~\cite{enwiki:1235411332}:
 
 \[
 D_i = \frac{|E_u(\Delta_{\text{Elo, i}}) + \hat{p}_u(\Delta_{\text{Elo, i}})|}{{[E_u(\Delta_{\text{Elo, i}})]}^2+{[\hat{p}_u(\Delta_{\text{Elo, i}})]}^2}
@@ -120,8 +118,26 @@ MSE = \frac{1}{M}\sum_{i=1}^M {(D_i)}^2
 
 where $M$ is the number of partitions. We then repeat this process for a range of $K$ values ($K \in {10, 15, 20, 25, 30, 35, 40}$), and choose the $K$ that minimizes the MSE.\@ (See INSERT REF TO PLOT.) Of course, this process increases the risk of overfitting to the regular season data. However, if we incorporate the tournament games, then we are not providing an unbiased assessment of our model's performance on the tournament data. See \autoref{nextSteps} for further discussion of overfitting.
 
+\subsection{Bootstrapping Baseline Uncertainty}
+As alluded to in the introduction, there is one partition we are particularly interested in: the one with the highest score differential. We will bootstrap many sample means to construct an approximate 95\% percentile bootstrap confidence interval (CI) for the probability of an upset in the highest score differential partition~\cite{uchicagoPercentileBootstrap}\cite{hesterberg_bootstrap_2015}. This will give an approximate 95\% CI for the ``baseline uncertainty'' of a basketball game in the March Madness tournament, provided we make the following assumptions:
+\begin{enumerate}
+    \item The Elo ratings are accurate.
+    \item This maximum Elo rating difference is close to the true maximum Elo rating difference that would happen in a tournament. 
+    \item This sample of high differential games is representative of all high differential games.
+    \item The sample distribution of the sample mean is symmetric (this allows us to say we can cut off both 2.5\% tails of the distribution for our confidence interval).
+    \item The bootstrapped sample distribution of the sample mean is representative of the true distribution of the sample mean.
+\end{enumerate}
+
+If are comfortable with these assumptions, we would then have an estimate range for the minimum amount of uncertainty that exists a tournament game, regardless of skill differential. With more time, we would have liked to explore the validity of these assumptions in more detail.
+% 3. POSSIBLY Use the CI for p-hat to adjust Elo ratings and/or accept/reject a hypothesis about the actual p-hat.
+
+
+
 \subsection{Weaknesses}
-An obvious weakness of our model is our lack of data for the other teams in the league. Ideally, we would like to have accurate Elo ratings for these teams so that we can get accurate Elo updates for the tournament teams. We have tried to address this by changing the update formula for non-tournament teams, but ultimately we would prefer to just have more data for those teams. Another weakness is the previously mentioned risk of overfitting to the regular season data due to the selection of $K$.
+An obvious weakness of our model is our lack of data for the other teams in the league. Ideally, we would like to have accurate Elo ratings for these teams so that we can get accurate Elo updates for the tournament teams. We have tried to address this by changing the update formula for non-tournament teams, but ultimately we would prefer to just have more data for those teams. Another weakness is the previously mentioned risk of overfitting to the regular season data due to the selection of $K$. 
+
+\subsection{Rejected Approaches}
+We considered only use the games between tournament teams to caluclate the MLE of each partition upset probability. However, this would have seriously limited our already small dataset, so we decided against this. We also considered bootstrapping for the sample mean. However, this wouldn't do anything different as this bootstrapped average should just converge to the original sample mean. 
 
 \section{Results}
 % What does your model say about the question you have been given?
@@ -132,18 +148,22 @@ An obvious weakness of our model is our lack of data for the other teams in the 
 
 
 \subsection{Verifying Elo Rankings}
-As discussed in \autoref{bootstrap}, we plot the Elo predicted upset probability $E_u(\Delta_{\text{Elo}})$ (based on the final regular season Elo ratings) against the observed bootstrapped probability $\hat{p}_u(\Delta_{\text{Elo}})$, as well as the $y=x$ line. If our Elo system has perfectly captured the expected upset probability, then these points should be close to the $y=x$ line. To measure the inaccuracy, we calculate the mean squared error. Plot Y shows the effect of $K$ on the MSE (as discussed in \autoref{bootstrap}) while plot X uses the value of $K$ that minimized the MSE.\@ JAKE GENERATE PLOTS???
+As discussed in \autoref{verify}, we plot the Elo predicted upset probability $E_u(\Delta_{\text{Elo}})$ (based on the final regular season Elo ratings) against the observed bootstrapped probability $\hat{p}_u(\Delta_{\text{Elo}})$, as well as the $y=x$ line. If our Elo system has perfectly captured the expected upset probability, then these points should be close to the $y=x$ line. To measure the inaccuracy, we calculate the mean squared error. Plot Y shows the effect of $K$ on the MSE (as discussed in \autoref{verify}) while plot X uses the value of $K$ that minimized the MSE.\@ JAKE GENERATE PLOTS???
 
 \subsection{Quantifying Uncertainty}
-To first order, we now also have two (hopefully similar) ways of quantifying the measure of uncertainty in a basketball game: the expected probability of an upset based on Elo rankings (as a function of the difference in Elo rankings), and the bootstrapped estimate for the probability of an upset (as a function of the difference in Elo rankings). Using the expected probability as a measure of the uncertainty assumes that the formula used to calculate the expected probabilities given Elo rating is a good model for the probability of an upset. Using the bootstrapped probability as a measure of uncertainty assumes that we have enough data to be able to approximate the true probability of an upset for a given class of difference in Elo rankings. Both of these measures assume that our Elo rankings --- or at least their differences --- accurately capture the differences in skill level between teams (which is no small assumption). We will make this aassumption for the remainder of this paper; while our Elo system might not be completely accurate, it could be improved with more time and the incorporation of more data (see \autoref{nextSteps}).
+To first order, we now also have two (hopefully similar) ways of quantifying the measure of uncertainty in a basketball game: the expected probability of an upset based on Elo rankings (as a function of the difference in Elo rankings), and the MLE for the probability of an upset (as a function of the difference in Elo rankings). Using the expected probability as a measure of the uncertainty assumes that the formula used to calculate the expected probabilities given Elo rating is a good model for the probability of an upset. Using the bootstrapped probability as a measure of uncertainty assumes that we have enough data to be able to approximate the true probability of an upset for a given class of difference in Elo rankings. Both of these measures assume that our Elo rankings --- or at least their differences --- accurately capture the differences in skill level between teams (which is no small assumption). We will make this aassumption for the remainder of this paper; while our Elo system might not be completely accurate, it could be improved with more time and the incorporation of more data (see \autoref{nextSteps}).
 
-We would like to somehow combine these two measures of uncertainty for our predictions. One option here is to simply average the two upset probabilities. Another option is ROHAN???
+As far as our basic underlying uncertainty --- that is, the uncertainty for a game with a maximum differential --- we found the confidence interval to be between BLANK and BLANK.\@ See (INSERT PLOT JAKE) for the bootstrap estimated distribution of the sample mean.
 
 
-We would also like to consider a ``higher order'' kind of uncertainty by comparing the bootstrapped probability of an upset to the expected probability of an upset. For example in cases where these probabilities differ significantly, we might consider increasing the chance of an upset??? ROHAN?\@
+% Actually, I don't think we need to say either of these kinds of things. 
+% We would like to somehow combine these two measures of uncertainty for our predictions. One option here is to simply average the two upset probabilities. Another option is ROHAN???
+
+
+% We would also like to consider a ``higher order'' kind of uncertainty by comparing the bootstrapped probability of an upset to the expected probability of an upset. For example in cases where these probabilities differ significantly, we might consider increasing the chance of an upset??? ROHAN?\@
 
 \subsection{Predicting March Madness 2024}
-We would like to see how well our model could have predicted the results of the March Madness 2024 Tournament. To this end, we ran a large number of simulations using our Elo predictions with our predicted chance of upset and recorded what percentage of times we correctly predicted the outcome of the tournament. Since this was a very low value, we also recorded the average percentage of games for which we correctly predicted the outcome. JAKE?\@ Plots?
+We would like to see how well our model could have predicted the results of the March Madness 2024 Tournament. To this end, we ran a large number of simulations using our Elo predictions by defaulting to the winner with the higher Elo but then switching our choice using the (Elo prediction, assuming we find its close enough to the MLEs) and ``roll a dice'' (with computer generated pseudo-random numbers) to determine whether an upset occurs. We then recorded what percentage of times we correctly predicted the outcome of the tournament. Since this was a very low value, we also recorded the average percentage of games for which we correctly predicted the outcome. JAKE?\@ Plots?
 
 
 Of course, due to the uncertainty everyone acknowleges exists, this percentage would be low no matter what. After all, no one has ever correctly guessed the result of the tournament~\cite{cbsnewsAnyoneEver}. However, we note that our model (on average) performed better than just picking the winner as the one with the better seed. Using this strategy would have yielded correct predictions on (JAKE?)\% of the games.
@@ -151,9 +171,9 @@ Of course, due to the uncertainty everyone acknowleges exists, this percentage w
 
 
 \section{Next Steps}\label{nextSteps}
-
-
 There are several things we would have liked to check if we had had more time. For one, it would be interesting to explore the effect of overfitting by the choice of $K$. That is, does the value of $K$ which minimized the MSE for the bootstrapping verification also maximize the likelihood of predicting the actual outcome of the tournament? If not, then we may want to look into a different way of picking $K$ (perhaps one which incorporates past data) as this choice seems to have lead to overfitting on the regular season games. We also would have liked to explore incorporating the score differential in different ways (such as $\gamma_{n+1} = \gamma_n + K^{\frac{S_{\text{win}}}{S_{\text{lose}}}}(O - E)$ as previously mentioned).
+
+We would have liked to explore coming up with a prior distribution for the true ${p}_u(\Delta_{\text{Elo}})$ using our Elo expected ratings and then updating this prior via Bayesian inference using the observed upset game data. Moreover, we would have checked if all of the Elo expected probabilities were within approximate bootstrapped 95\% confidence intervals for $\hat{p}_u(\Delta_{\text{Elo}})$. This would have been a good sign that our Elo system is accurate. With more time, we also would have done more to explore the validity of the assumptions required for the approximate bootstrapped percentile confidence intervals to hold.
 
 Another thing we would have liked to have done is to see how our MSE estimates would change if we added noise to the data; for example, we could have multiplied each score in the game by some rangomd number between 0.8 and 1.2 and seen if we would still have obtained a similar ideal value of $K$ and the similar MSE for this value. If so, this would indicate our Elo system is robust, and that our $K$ value is not overfit to the regular season data.
 
@@ -173,3 +193,9 @@ There are several things we would like to do if we had the time and resources to
 \input{AI Use Report.tex}
 
 \end{document}
+
+
+
+
+% CANT DO THIS WITHOUT KNOWING TRUE P-HAT. could do this to see how often it covers E_0 but who cares? 2. Bootstrap CI's to estiate coverage probability (what percent of the bootstrapped CI's covered the )
+% Note that the probability of an upset obtained via bootstrapping $\hat{p}_u(\Delta_{\text{Elo}})$ could be anything between 0 and 1, while the expected outcome probability from Elo rankings is necessarily between 0 and 1/2. However, we expect that $\hat{p}_u(\Delta_{\text{Elo}})$ should be roughly less than 0 to 1/2, for the same reasons that we hope our Elo expected outcomes $E_u(\Delta_{\text{Elo}})$ are similar to $\hat{p}_u(\Delta_{\text{Elo}})$ for each value of $(\Delta_{\text{Elo}})$. 

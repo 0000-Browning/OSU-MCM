@@ -7,13 +7,12 @@ Christopher Brito.
 \newblock \url{https://www.cbsnews.com/news/perfect-bracket-march-madness/}.
 \newblock [Accessed 16-11-2024].
 
-\bibitem{builtinWhatBootstrapping}
-Trist'n Joseph.
-\newblock {W}hat {I}s {B}ootstrapping {S}tatistics? | {B}uilt {I}n ---
-  builtin.com.
-\newblock
-  \url{https://builtin.com/data-science/bootstrapping-statistics#:~:text=%E2%80%9CThe%20advantages%20of%20bootstrapping%20are,other%20groups%20of%20sampled%20data.%E2%80%9D}.
-\newblock [Accessed 16-11-2024].
+\bibitem{hesterberg_bootstrap_2015}
+Timothy~C. Hesterberg.
+\newblock What teachers should know about the bootstrap: Resampling in the
+  undergraduate statistics curriculum.
+\newblock {\em The American Statistician}, 69(4):371--386, 2015.
+\newblock Epub 2015 Dec 29.
 
 \bibitem{stmorseStatisticalLearning}
 Steven Morse.
@@ -21,6 +20,14 @@ Steven Morse.
   stmorse.github.io.
 \newblock \url{https://stmorse.github.io/journal/Elo.html}.
 \newblock [Accessed 16-11-2024].
+
+\bibitem{uchicagoPercentileBootstrap}
+Dan~L. Nicolae.
+\newblock {T}he percentile bootstrap confidence intervals 2014; {I}ntroduction
+  to {D}ata {S}cience {I} \&amp; {I}{I} --- ds1.datascience.uchicago.edu.
+\newblock
+  \url{https://ds1.datascience.uchicago.edu/14/3/ConfidenceIntervals_3_PercentileBootstrap.html}.
+\newblock [Accessed 17-11-2024].
 
 \bibitem{statproofbookMaximumLikelihood}
 Joram Soch.
