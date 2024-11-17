@@ -6,7 +6,7 @@
 \usepackage{csquotes}
 \usepackage[margin=1in]{geometry}
 
-\title{Luck vs Skill in College Basketball}
+\title{Quantifying Uncertainty in College Basketball}
 \author{Seth Peacock, Jake Browning, Rohan Mawalkar}
 \date{November 17 2024}
 
@@ -43,7 +43,7 @@ Describe the problem, your model, results and how your model performed.
 \section{Introduction}
 % ``Rephrase the problem
 % Problems are open-ended and there are many ways to interpret and address them. Explain how you approached the problem."
-In this paper, we explore the relationship between skill and luck in college basketball. Our goal here is twofold: first develop a model which predicts the outcome of a basketball game, and second quantify the effect of luck/uncertainty in a basketball game. Since we want to incorporate the effect of uncertainty, our prediction model will contain a stochastic element which we will have to derive. To train our model, we will use data from the regular season games leading up to the 2024 March Madness Tournament, and then test our model's ability to predict the outcome of the tournament. Of course, we do not expect to be able to actually predict the outcome of the tournament. We won't go as far as to say that it is impossible to predict the outcome; it could be true that if you knew the precise location of all the relevant atoms in all the stadiums and in all the players and in everything they interact with then you could predict the outcome of the NCAA tournament perfectly. The question we are interested in is different: \textit{given the data we have}, what is the minimum amount of uncertainty that still exists in a basketball game? That is, what is the minimum chance of an upset, no matter how different in observed skill two teams are? To address the second question, we will quantify the effect of uncertainty in a basketball game by estimating the probability of an upset in the most extreme case of skill differential. 
+In this paper, we explore the relationship between skill and luck in college basketball. Our goal here is twofold: first we develop a model which predicts the outcome of a basketball game, and second we use this model to somehow quantify the significance of luck/uncertainty in a basketball game. Since we want to incorporate the effect of uncertainty, our prediction model will contain a stochastic element which we will have to derive. To train our model, we will use data from the regular season games leading up to the 2024 March Madness Tournament, and then test our model's ability to predict the outcome of the tournament. Of course, we do not expect to be able to actually predict the outcome of the tournament. We won't go as far as to say that this is impossible; it could be true that if you knew the precise location of all the relevant atoms in all the stadiums and in all the players and in everything they interact with (etc.) then you could predict the outcome of the NCAA tournament perfectly. If this is true, then it may be accurate to say that there is no such thing as ``luck'' in basketball (depending on how you define luck). We will set this aside, as the question we are interested in is different: \textit{given the data we have}, what is the minimum amount of uncertainty that still exists in a basketball game? More concretely, what is the minimum chance of an upset, no matter how different in skill we observe two teams to be? We will use our model to estimate this minimum upset probability.
 
 \section{Methods}
 % ``Explain your model
@@ -57,7 +57,7 @@ In this paper, we explore the relationship between skill and luck in college bas
 % How could you test your model? How stable are the results to noise? 
 % If you had more time, how would you expand/improve your model''?
 
-Our model will be a modified version of the classic Elo ranking in chess, which we will use along with data from throughout the regular season to assign each team a ranking. (From here on, when we say ``Elo ranking'' we will mean our modified ranking, and will say ``classic Elo ranking'' if we mean the original.) Given a pair of teams, these rankings will be used to give us probabilities of an upset (that is, the probability that the team with the lower Elo rating wins). 
+Our model will implement modified version of the classic Elo ranking in chess. Using win/loss and score data from the 2024 regular season, we assign each team a ranking. (From here on, when we say ``Elo ranking'' we will mean our modified ranking, and will be more specific if we mean the original.) Given a pair of teams, these rankings will be used to give us probabilities of an upset (that is, the probability that the team with the lower Elo rating wins). 
 
 
 \subsection{Our ``Elo'' Ranking}
@@ -66,20 +66,20 @@ Traditionally, (see~\cite{mediumRatingSystem}), the Elo ranking system first cal
 \begin{equation}\label{eq:E}
 E = \frac{1}{1+10^{(\gamma_{opp}-\gamma_n)/c}}
 \end{equation}
-\begin{equation}\label{eq:E}
+\begin{equation}\label{eq:E_opp}
 E_{opp} = \frac{1}{1+10^{(\gamma_n-\gamma_{opp})/c}}
 \end{equation}
 
 where $\gamma_n$ is the main team's pre-game Elo score (after game $n$), $\gamma_{opp}$ is the opposing team's pre-game Elo score, and $c, K > 0$ are constants. Note that $E + E_{opp} = 1$. The main team's Elo rating is updated after their $n+1^{\text{th}}$ game based on the following formula:
 
 \begin{equation}
-\gamma_{n+1} = \gamma_n + K*(O - E)
+\gamma_{n+1} = \gamma_n + K(O - E)
 \end{equation}
 
 
 Where $O$ is 1 if the team wins and 0 if the team loses. Since E is a probability,  $E \in [0, 1]$. This means that a team winning or losing uniquely determines whether they gain or lose points on their Elo rating. This is essentially performing a stochastic gradient descent (taking a step after each game) for a logistic regression model, where the Elo ratings are the weights of the model~\cite{stmorseStatisticalLearning}.
 
-However, this score update does not take into account the score differential of the outcome of the game, given its origin in chess, a scoreless game. Thus we propose a modified Elo system which uses the score outcomes to update a team's Elo score in one of the two following ways: 
+However, this traditional Elo score update does not take into account the score differential of the outcome of the game, given its origin in chess, a scoreless game. Thus we propose a modified Elo system which uses the score outcomes to update a team's Elo score in one of the two following ways: 
 
 \begin{equation}
 \label{exponentialUpdate}
@@ -89,13 +89,13 @@ However, this score update does not take into account the score differential of 
 
 \begin{equation}
 \label{multiplyUpdate}
-\gamma_{n+1} = \gamma_n + K*(O - E)*\frac{S_{\text{win}}}{S_{\text{lose}}}
+\gamma_{n+1} = \gamma_n + K(O - E)\frac{S_{\text{win}}}{S_{\text{lose}}}
 \end{equation}
 
 
-where $S_{\text{win}}$, $S_{\text{lose}}$ are the scores of the winner/loser and the other variables are defined as above. These changes mean that a team's Elo rating will change by a larger amount when the score differential is larger, and vice-versa. We will calculate $E$ in the same way as setting $c$ to the canonical 400 for simplicity, and choose $K$ based on considerations described in the next section near a canonical value  of $K\approx 32$~\cite{mediumRatingSystem}.
+where $S_{\text{win}}$, $S_{\text{lose}}$ are the scores of the winner/loser and the other variables are defined as above. These changes mean that a team's Elo rating will change by a larger amount when the score differential is larger, allowing for larger changes (positive or negative) in the case of a blowout. We will calculate $E$ in the same way as setting $c$ to the canonical 400 for simplicity, and choose $K$ based on considerations described in the next section near a canonical value  of $K\approx 32$~\cite{mediumRatingSystem}.
 
-We considered several possibilities for incorporating the score differential. We considered defining the score differential as the absolute value of the difference of the scores. However, this would weight a 20--10 loss as the same as a 90--80 loss, which seems much less accurate to how basketball fans see the game. Thus, we would like to instead use the ratio $\frac{S_{\text{win}}}{S_{\text{lose}}}$. The question now becomes: how much do we want to allow this ratio to effect the score update? In \autoref{exponentialUpdate}, we allow it to have a much more significant effect than it does in \autoref{multiplyUpdate}. Ultimately, we decided to use both; we will discuss this further in the following section.
+We considered several possibilities for incorporating the score differential. We could have defined the score differential as the absolute value of the difference of the scores. However, this would weight a 20--10 loss as the same as a 90--80 loss, which seems incommensurate with how basketball fans see the game. Thus, we would like to instead use the ratio $\frac{S_{\text{win}}}{S_{\text{lose}}}$. The question now becomes: how much do we want to allow this ratio to effect the score update? In \autoref{exponentialUpdate}, we allow it to have a much more significant effect (and to give much larger score updates) than it does in \autoref{multiplyUpdate}. Ultimately, we decided to use both; we will discuss this further in the following section.
 
 \subsection{Elo Calculation Algorithm}
 Our goal is to have an Elo ranking for every team that made it to the 2024 March Madness Tournament, using the results of the games in the regular season. However, many of these regular season games were not played against the teams that made it to the tournament. Thus, we also needed to assign Elo ratings to teams that did not play in the regular season. Note that there aren't many games for these non-tournament teams; we will discuss this issue below. 
@@ -103,18 +103,18 @@ Our goal is to have an Elo ranking for every team that made it to the 2024 March
 We start all teams at the same Elo rating. This is typically a high positive value (to prevent giving a discouraging negative rating to low ranking chess players), but since the model solely uses the difference in Elo ratings, it doesn't matter what the initial value is. We chose to set it at 0 for simplicity. We then sort the games by date, and use one of the Elo update formulas to update the Elo ratings for every game. There are four cases to consider:
 
 \begin{enumerate}
-    \item The update for a tournament team after beating a non-tournament team. In this case, we use \autoref{multiplyUpdate}, as we don't want this game (or the score differential) to have a huge effect --- the tournament team should have won anyhow.
-    \item The update for a non-tournament team playing any other team. In this case, we use \autoref{multiplyUpdate}; there aren't very many games for these teams, so we don't want their Elo rating to change too much from zero just based on a few games. Of course, we still want a tournament team's score to go down significantly if they lose to this team; see next point.
-    \item The update for a tournament team after losing to a non-tournament team. In this case, we use \autoref{exponentialUpdate}, as we want the score differential to have a large effect. This tournament team is likely to do much worse in the tournament if it lost in a blowout to a team that didn't even make it to the tournament. As mentioned above, these non-tournament teams will have average Elo ratings, so we want to emphasize the fact that this really is a team the tournament team should have beat.
+    \item The update for a tournament team after beating a non-tournament team. In this case we use \autoref{multiplyUpdate}, as we don't want this game to have a huge effect, even if it was a blowout --- the tournament team should have won anyhow.
+    \item The update for a non-tournament team playing any other team. In this case, we use \autoref{exponentialUpdate}; there aren't very many games for these teams, so we don't to allow their Elo rating to change a lot from the starting score just based on a few games, especially if they win/lost in a blowout.
+    \item The update for a tournament team after losing to a non-tournament team. In this case, we use \autoref{exponentialUpdate}, as we want the score differential to have a large effect. It should say a lot about this team if it lost in a blowout to a team that didn't even make it to the tournament.
     \item The update for a tournament team after playing another a tournament team. In this case, we use \autoref{exponentialUpdate} to give the score differential a large effect; blowouts in this case should have a large effect on Elo ratings. 
 \end{enumerate}
 
 After all of the games have created updates, we now have the Elo rating for every team that made it to the tournament. At this point, we will throw out the other teams that didn't make it to the tournament, as their Elo ratings are less meaningful due to the small numbers of games.
 
 \subsection{Verifying Elo Rankings}\label{verify}
-We would like to verify the accuracy of our Elo system. To do this, we go back to the samples from the regular season games to compare our model's predictions of the probability of an upset to the actual observed probability of an upset, for a given difference in Elo rankings. Let $E_u(\Delta_{Elo})$ and $\hat{p}_u(\Delta_{Elo})$ be functions of $\Delta_{Elo}$, the difference in (final) Elo ratings between two teams. Respectively, these represent the predicted and observed probabilities of an upset. If our Elo ratings are accurate, we should see these values are close to one another.
+We would like to verify the accuracy of our Elo system. To do this, we go back to the samples from the regular season games to compare our model's predictions of the probability of an upset to the actual observed probability of an upset, for a given difference in Elo rankings. 
 
-First, we find the minimum and maximum differences in (final) Elo rankings for all of the games played. We then divvy this up into equal parts, as small as we can but with each partition large enough to contain a significant portion of the games. See JAKE INSERT FIG for a histogram of how many games fall into the partitions we chose. For each partition, we then calculate $E_u(\Delta_{\text{Elo}})$ via \autoref{eq:E} using the middle $\Delta_{\text{Elo}}$ for that partition. Let $N_i$ be the number of games played in the regular season. To calculate $\hat{p}_u(\Delta_{\text{Elo}})$, we simply take the number of upsets (lower Elo rating team wins) divided by $N_i$. This is the maximum likelihood estimate (MLE) for the probability of an upset in the given partition~\cite{statproofbookMaximumLikelihood}.
+First, we make a histogram of all of the different score differentials; see JAKE INSERT FIG. We then partition the games based on these score differentials; each bin is 25 wide with the last bin being all games with a score differential of 250+. For each partition, we then calculate $E_u(\Delta_{\text{Elo}})$ via \autoref{eq:E} using the middle $\Delta_{\text{Elo}}$ for that partition. Let $N_i$ be the number of games played in the regular season. To calculate $\hat{p}_u(\Delta_{\text{Elo}})$, we simply take the number of upsets (lower Elo rating team wins) divided by $N_i$. This is the maximum likelihood estimate (MLE) for the probability of an upset in the given partition~\cite{statproofbookMaximumLikelihood}.
 
 To quantify the accuracy of our Elo system, we first plot the Elo predicted upset probability $E_u(\Delta_{\text{Elo}})$ against the observed probability MLE $\hat{p}_u(\Delta_{\text{Elo}})$ for each value of $\Delta_{\text{Elo}}$. We then plot the $y=x$ line and calculate the MSE of these points with respect to this diagonal line. That is, we calculate the straight line distance from each point in 2D space to the $y=x$ line~\cite{enwiki:1235411332}:
 
@@ -152,7 +152,7 @@ If are comfortable with these assumptions, we would then have an estimate range 
 An obvious weakness of our model is our lack of data for the other teams in the league. Ideally, we would like to have accurate Elo ratings for these teams so that we can get accurate Elo updates for the tournament teams. We have tried to address this by changing the update formula for non-tournament teams, but ultimately we would prefer to just have more data for those teams. But this is just a small part of the problem; clearly, there is much much more pre-tournament data out there that could be useful, and assumption \#2 above is false. All we are using in our model is the win/loss margins of the regular season games. For this reason, we do not claim that our observed derived minimum amount of uncertainty is an accurate estimate of the true uncertainty when all currently available data is utilized. The more information used, the more opportunities there are to turn uncertainty into certainty. Our claim is that this is an estimate for the uncertainty \textit{given the data we used}. We discuss different types of data we could incorporate in \autoref{additionalData}. Another weakness is the previously mentioned risk of overfitting to the regular season data due to the selection of $K$. We explore possible solutions in \autoref{nextSteps}.
 
 \subsection{Rejected Approaches}
-We considered only use the games between tournament teams to caluclate the MLE of each partition upset probability. However, this would have seriously limited our already small dataset, so we decided against this. 
+We considered only using the games between tournament teams to caluclate the MLE of each partition upset probability. However, this would have seriously limited our already small dataset, so we decided against this. 
 
 % We also considered bootstrapping for the sample mean. However, this wouldn't do anything different as this bootstrapped average should just converge to the original sample mean. 
 
