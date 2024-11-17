@@ -1,0 +1,301 @@
+\section{AI Use Report}
+ChatGPT was used to fix bugs in our code as well as for preliminary exploration on the problem. The only ideas we used from this exploration were those which we then found true sources for and cited in the paper. Here are the prompts and responses for this exploration, along with one example from many bugfixing prompts:
+\begin{enumerate}
+\item OpenAI ChatGPT (Nov 16, 2024 version, ChatGPT-4) \\
+Query1: how is Elo score update calculated after each game? \\
+Output1: \textbf{Elo Score Update Calculation}
+
+Elo score updates are calculated using a formula that adjusts the players' ratings based on the game outcome and the expected outcome. Here's the general process:
+
+\textbf{1. Expected Outcome Calculation}
+
+The expected score $E_A$ for player $A$ against player $B$ is calculated as:
+\[
+E_A = \frac{1}{1 + 10^{\frac{R_B - R_A}{400}}}
+\]
+
+Similarly, the expected score for player $B$ is:
+\[
+E_B = \frac{1}{1 + 10^{\frac{R_A - R_B}{400}}}
+\]
+
+Note that:
+\[
+E_A + E_B = 1
+\]
+
+\textbf{2. Game Outcome}
+
+The actual score $S_A$ for player $A$ is:
+\[
+S_A =
+\begin{cases}
+1, & \text{if player $A$ wins,} \\
+0.5, & \text{if the game is a draw,} \\
+0, & \text{if player $A$ loses.}
+\end{cases}
+\]
+
+The actual score for player $B$ is:
+\[
+S_B = 1 - S_A
+\]
+
+\textbf{3. Elo Update Formula}
+
+The updated rating for player $A$ is calculated as:
+\[
+R_A' = R_A + K \cdot (S_A - E_A)
+\]
+
+Similarly, for player $B$:
+\[
+R_B' = R_B + K \cdot (S_B - E_B)
+\]
+
+Here:
+\begin{itemize}
+    \item $K$ is the K-factor, a constant that determines the weight of the update (commonly between 10 and 40, depending on the rating system),
+    \item $S_A$ and $S_B$ are the actual scores,
+    \item $E_A$ and $E_B$ are the expected scores.
+\end{itemize}
+
+\textbf{Example Calculation}
+
+\textbf{Scenario:}
+\begin{itemize}
+    \item Player $A$: $R_A = 1600$
+    \item Player $B$: $R_B = 1400$
+    \item $K = 32$
+    \item Player $A$ wins ($S_A = 1$, $S_B = 0$)
+\end{itemize}
+
+\textbf{Step 1: Expected Scores}
+\[
+E_A = \frac{1}{1 + 10^{\frac{1400 - 1600}{400}}} = \frac{1}{1 + 10^{-0.5}} \approx 0.76
+\]
+\[
+E_B = 1 - E_A = 0.24
+\]
+
+\textbf{Step 2: Elo Updates}
+\[
+R_A' = 1600 + 32 \cdot (1 - 0.76) = 1600 + 7.68 \approx 1608
+\]
+\[
+R_B' = 1400 + 32 \cdot (0 - 0.24) = 1400 - 7.68 \approx 1392
+\]
+
+\textbf{Results:}
+\begin{itemize}
+    \item Player $A$'s new rating: $R_A' \approx 1608$
+    \item Player $B$'s new rating: $R_B' \approx 1392$
+\end{itemize}
+
+\item
+Query2: where does the formula in 1 come from \\
+Output2: The formula for the expected outcome in Elo rating systems has its roots in probability theory and is based on a logistic distribution. It was designed to model the likelihood of one player defeating another based on their relative skill levels.
+
+\textbf{Key Principles Behind the Formula}
+
+\textbf{Skill Differences Translate to Probabilities}
+\begin{itemize}
+    \item The Elo system assumes that each player's skill can be represented by a single number (their Elo rating).
+    \item The difference in two players' ratings ($R_A - R_B$) is used to calculate the probability of one player defeating the other.
+    \item Larger differences in rating indicate a higher probability of the stronger player winning, while smaller differences imply a closer match.
+\end{itemize}
+
+\textbf{Logistic Distribution}
+\begin{itemize}
+    \item The formula:
+    \[
+    E_A = \frac{1}{1 + 10^{(R_B - R_A)/400}}
+    \]
+    comes from using a logistic curve to map the rating difference to a probability between 0 and 1. The logistic function is a standard choice for modeling probabilities that sum to 1 because it produces a smooth, S-shaped curve.
+    \item This curve reflects diminishing returns: as the rating difference increases, the stronger player’s win probability approaches but never reaches 1.
+\end{itemize}
+
+\textbf{Scaling with the 400 Constant}
+\begin{itemize}
+    \item The constant $400$ in the formula determines how quickly probabilities change with respect to rating differences.
+    \item A 400-point difference corresponds to a win probability of approximately 90\% for the higher-rated player. This was chosen empirically based on the performance of chess players during the Elo system's development.
+    \item The choice of $400$ can be adjusted for different implementations, but it remains standard in most Elo systems.
+\end{itemize}
+
+\textbf{Summing to Unity}
+\begin{itemize}
+    \item The expected scores $E_A$ and $E_B$ are complementary:
+    \[
+    E_A + E_B = 1
+    \]
+    \item This ensures the model is consistent with a two-player game: if one player is more likely to win, the other is equally less likely.
+\end{itemize}
+
+\textbf{Historical Development}
+
+Arpad Elo, the creator of the Elo system, was a physicist and chess master. He designed the system based on:
+\begin{itemize}
+    \item Observations of chess match outcomes.
+    \item The need for a probabilistic model that reflects the actual performance of players over time.
+\end{itemize}
+
+His work combined empirical data with the mathematical properties of the logistic function to create a simple yet effective rating system.
+
+\item
+Query3: why is bootstrapping useful \\
+Output3: Bootstrapping is a statistical technique used to estimate the sampling distribution of a statistic by resampling with replacement from the original data. It is useful for several reasons:
+
+\textbf{1. Doesn't Require Strong Assumptions}
+\begin{itemize}
+    \item Unlike traditional parametric methods, bootstrapping does not assume a specific distribution for the data (e.g., normality). This makes it applicable to a wide variety of data types and problems.
+\end{itemize}
+
+\textbf{2. Provides Robust Estimates}
+\begin{itemize}
+    \item It helps calculate robust estimates of standard errors, confidence intervals, and other statistical measures, even when traditional assumptions (like independence or homogeneity of variance) are violated.
+\end{itemize}
+
+\textbf{3. Useful for Small Samples}
+\begin{itemize}
+    \item When the sample size is small, traditional inferential techniques may not be reliable. Bootstrapping generates many simulated samples, effectively allowing a more reliable estimation.
+\end{itemize}
+
+\textbf{4. Versatile Across Statistics}
+\begin{itemize}
+    \item It can be applied to virtually any statistic (mean, median, variance, regression coefficients, etc.), making it a highly flexible tool.
+\end{itemize}
+
+\textbf{5. Handles Complex Data}
+\begin{itemize}
+    \item Bootstrapping is particularly useful for complex data structures, such as hierarchical models or situations where analytical solutions are challenging.
+\end{itemize}
+
+\textbf{6. Confidence Intervals and Hypothesis Testing}
+\begin{itemize}
+    \item Bootstrapping provides a straightforward way to compute confidence intervals and perform hypothesis testing without relying on asymptotic theory or approximate formulas.
+\end{itemize}
+
+\textbf{7. Improves Intuition}
+\begin{itemize}
+    \item By resampling the data and observing the variability of a statistic, bootstrapping provides intuitive insights into the uncertainty of estimates.
+\end{itemize}
+
+\textbf{Example}
+\begin{itemize}
+    \item Suppose you calculate the mean of a dataset, and you want a confidence interval for it. Instead of relying on formulas based on assumptions, you can:
+    \begin{itemize}
+        \item Resample the data with replacement multiple times.
+        \item Compute the mean for each resample.
+        \item Use the distribution of these means to derive the confidence interval.
+    \end{itemize}
+\end{itemize}
+
+\textbf{Limitations}
+\begin{itemize}
+    \item \textbf{Computationally Intensive:} Bootstrapping involves many resampling iterations, which can be slow for large datasets or complex models.
+    \item \textbf{Not Always Accurate:} In cases of very small sample sizes or heavily skewed distributions, bootstrapping may not be reliable.
+    \item \textbf{Dependent on Data Quality:} If the original sample is not representative, the bootstrapped estimates may also be biased.
+\end{itemize}
+
+Despite these limitations, bootstrapping remains a powerful and widely-used tool in modern statistics.
+
+\item
+Query4: Recipe terminated with fatal error: spawn pdflatex ENOENT. \\
+Output4: The error \texttt{spawn pdflatex ENOENT} typically occurs when attempting to compile a LaTeX document and the necessary LaTeX distribution (e.g., \texttt{pdflatex}) is not installed or cannot be found by the system. Here's how to resolve this issue:
+
+\textbf{1. Check if LaTeX is Installed}
+The error indicates that \texttt{pdflatex} (a part of a LaTeX distribution) is missing.
+
+\textbf{On Windows:}
+\begin{itemize}
+    \item Verify that you have a LaTeX distribution installed, such as:
+    \begin{itemize}
+        \item MiKTeX: \url{https://miktex.org/}
+        \item TeX Live: \url{https://www.tug.org/texlive/}
+    \end{itemize}
+    \item Ensure the LaTeX installation directory is added to your system's PATH environment variable:
+    \begin{itemize}
+        \item Open the "Environment Variables" settings.
+        \item Locate the PATH variable and add the directory where \texttt{pdflatex.exe} is located (e.g., \texttt{C:\textbackslash Program Files\textbackslash MiKTeX\textbackslash miktex\textbackslash bin\textbackslash x64}).
+    \end{itemize}
+\end{itemize}
+
+\textbf{On macOS:}
+\begin{itemize}
+    \item Install MacTeX: \url{https://www.tug.org/mactex/}
+    \item Ensure the binary directory is in your PATH:
+    \begin{itemize}
+        \item Usually \texttt{/Library/TeX/texbin}.
+    \end{itemize}
+\end{itemize}
+
+\textbf{On Linux:}
+\begin{itemize}
+    \item Install TeX Live or another distribution using your package manager:
+    \begin{verbatim}
+    sudo apt-get install texlive
+    \end{verbatim}
+    \item Check if \texttt{pdflatex} is available:
+    \begin{verbatim}
+    pdflatex --version
+    \end{verbatim}
+\end{itemize}
+
+\textbf{2. Check Your Editor's Configuration}
+If you're using an editor like VS Code or TeXstudio, ensure it's correctly configured:
+
+\textbf{VS Code:}
+\begin{itemize}
+    \item Ensure you have the LaTeX Workshop extension installed.
+    \item In \texttt{settings.json}, configure the LaTeX tools path, if necessary:
+    \begin{verbatim}
+    "latex-workshop.latex.tools": [
+      {
+        "name": "pdflatex",
+        "command": "pdflatex",
+        "args": [
+          "-synctex=1",
+          "-interaction=nonstopmode",
+          "-file-line-error",
+          "%DOC%"
+        ]
+      }
+    ]
+    \end{verbatim}
+    \item Restart VS Code.
+\end{itemize}
+
+\textbf{TeXstudio:}
+\begin{itemize}
+    \item Go to \texttt{Options > Configure TeXstudio > Commands}.
+    \item Ensure \texttt{pdflatex} is properly set, e.g., \texttt{pdflatex -synctex=1 -interaction=nonstopmode \%.tex}.
+\end{itemize}
+
+\textbf{3. Verify pdflatex Availability}
+Run the following command in your terminal or command prompt:
+\begin{verbatim}
+pdflatex --version
+\end{verbatim}
+If you see the version information, it means \texttt{pdflatex} is installed and available in your PATH. If not, verify your LaTeX distribution installation or add it to the PATH.
+
+\textbf{4. Fix Specific LaTeX Distribution Issues}
+\begin{itemize}
+    \item \textbf{MiKTeX:} Open the MiKTeX console and ensure all necessary packages are installed and up-to-date.
+    \item \textbf{TeX Live:} Use the \texttt{tlmgr} command to update your distribution and ensure \texttt{pdflatex} is installed:
+    \begin{verbatim}
+    tlmgr install pdflatex
+    \end{verbatim}
+\end{itemize}
+
+\textbf{5. Restart and Recompile}
+\begin{itemize}
+    \item After making changes:
+    \begin{itemize}
+        \item Restart your editor/IDE.
+        \item Attempt to compile the LaTeX document again.
+    \end{itemize}
+\end{itemize}
+
+If the issue persists, share more details about your setup (OS, LaTeX distribution, and editor), and I can provide further help!
+    
+\end{enumerate}

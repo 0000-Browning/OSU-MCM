@@ -1,8 +1,8 @@
 \documentclass{article}
 \usepackage{graphicx} % Required for inserting images
-\usepackage{amsmath}
 \usepackage{url}
 \usepackage{hyperref}
+\usepackage{amsmath}
 
 \title{Luck vs Skill in College Basketball}
 \author{Jake Browning, Rohan Mawalkar, Seth Peacock}
@@ -53,7 +53,7 @@ Our model will be a modified version of the classic Elo ranking in chess, which 
 Traditionally (see~\cite{mediumRatingSystem}), the Elo ranking system first calculates an expected score for the game as a function of the difference in the two teams' Elo ratings. Here, $E$ is the ``main'' team while $E_{opp}$ is the opposing team:
 
 \begin{equation}\label{eq:E}
-E = \frac{1}{1+10^{\gamma_{opp}-\gamma}/c}
+E = \frac{1}{1+10^{(\gamma_{opp}-\gamma_n)/c}}
 \end{equation}
 
 where $\gamma_n$ is the main team's pre-game Elo score (after game $n$), $\gamma_{opp}$ is the opposing team's pre-game Elo score, and $c, K > 0$ are constants. The main team's Elo rating is updated after their $n+1^{\text{th}}$ game based on the following formula:
@@ -106,7 +106,19 @@ First, we find the minimum and maximum differences in (final) Elo rankings for a
 % Note that the probability of an upset obtained via bootstrapping $\hat{p}_u(\Delta_{\text{Elo}})$ could be anything between 0 and 1, while the expected outcome probability from Elo rankings is necessarily between 0 and 1/2. However, we expect that $\hat{p}_u(\Delta_{\text{Elo}})$ should be roughly less than 0 to 1/2, for the same reasons that we hope our Elo expected outcomes $E_u(\Delta_{\text{Elo}})$ are similar to $\hat{p}_u(\Delta_{\text{Elo}})$ for each value of $(\Delta_{\text{Elo}})$. 
 
 
-To quantify the accuracy of our Elo system, we plot $E_U(\Delta_{\text{Elo}})$ against $\hat{p}_U(\Delta_{\text{Elo}})$ for each value of $\Delta_{\text{Elo}}$, and calculate the MSE of these points vs the $y=x$ line. We then repeat this process for a range of $K$ values ($K \in {10, 15, 20, 25, 30, 35, 40}$), and choose the $K$ that minimizes the MSE.\@ (See INSERT REF TO PLOT.) Of course, this process increases the risk of overfitting to the regular season data. However, if we incorporate the tournament games, then we are not providing an unbiased assessment of our model's performance on the tournament data. See \autoref{nextSteps} for further discussion of overfitting.
+To quantify the accuracy of our Elo system, we first plot the Elo predicted upset probability $E_u(\Delta_{\text{Elo}})$ against the observed bootstrapped probability $\hat{p}_u(\Delta_{\text{Elo}})$ for each value of $\Delta_{\text{Elo}}$. We then plot the $y=x$ line and calculate the MSE of these points with respect to this diagonal line. That is, we calculate the straight line distance from each point in 2D space to the $y=x$ line~\cite{enwiki:1235411332}:
+
+\[
+D_i = \frac{|E_u(\Delta_{\text{Elo, i}}) + \hat{p}_u(\Delta_{\text{Elo, i}})|}{{[E_u(\Delta_{\text{Elo, i}})]}^2+{[\hat{p}_u(\Delta_{\text{Elo, i}})]}^2}
+\]
+
+and average the squares of these distances:
+
+\[
+MSE = \frac{1}{M}\sum_{i=1}^M {(D_i)}^2
+\]
+
+where $M$ is the number of partitions. We then repeat this process for a range of $K$ values ($K \in {10, 15, 20, 25, 30, 35, 40}$), and choose the $K$ that minimizes the MSE.\@ (See INSERT REF TO PLOT.) Of course, this process increases the risk of overfitting to the regular season data. However, if we incorporate the tournament games, then we are not providing an unbiased assessment of our model's performance on the tournament data. See \autoref{nextSteps} for further discussion of overfitting.
 
 \subsection{Weaknesses}
 An obvious weakness of our model is our lack of data for the other teams in the league. Ideally, we would like to have accurate Elo ratings for these teams so that we can get accurate Elo updates for the tournament teams. We have tried to address this by changing the update formula for non-tournament teams, but ultimately we would prefer to just have more data for those teams. Another weakness is the previously mentioned risk of overfitting to the regular season data due to the selection of $K$.
@@ -120,7 +132,7 @@ An obvious weakness of our model is our lack of data for the other teams in the 
 
 
 \subsection{Verifying Elo Rankings}
-As discussed in \autoref{bootstrap}, we plot $E_u(\Delta_{\text{Elo}})$ against $\hat{p}_u(\Delta_{\text{Elo}})$ along with the $y=x$ line. If our Elo system has perfectly captured the expected upset probability, then these points should be close to the $y=x$ line. To measure the inaccuracy, we calculate the mean squared error. Plot Y shows the effect of $K$ on the MSE (as discussed in \autoref{bootstrap}) while plot X uses the value of $K$ that minimized the MSE.\@ JAKE GENERATE PLOTS???
+As discussed in \autoref{bootstrap}, we plot the Elo predicted upset probability $E_u(\Delta_{\text{Elo}})$ (based on the final regular season Elo ratings) against the observed bootstrapped probability $\hat{p}_u(\Delta_{\text{Elo}})$, as well as the $y=x$ line. If our Elo system has perfectly captured the expected upset probability, then these points should be close to the $y=x$ line. To measure the inaccuracy, we calculate the mean squared error. Plot Y shows the effect of $K$ on the MSE (as discussed in \autoref{bootstrap}) while plot X uses the value of $K$ that minimized the MSE.\@ JAKE GENERATE PLOTS???
 
 \subsection{Quantifying Uncertainty}
 To first order, we now also have two (hopefully similar) ways of quantifying the measure of uncertainty in a basketball game: the expected probability of an upset based on Elo rankings (as a function of the difference in Elo rankings), and the bootstrapped estimate for the probability of an upset (as a function of the difference in Elo rankings). Using the expected probability as a measure of the uncertainty assumes that the formula used to calculate the expected probabilities given Elo rating is a good model for the probability of an upset. Using the bootstrapped probability as a measure of uncertainty assumes that we have enough data to be able to approximate the true probability of an upset for a given class of difference in Elo rankings. Both of these measures assume that our Elo rankings --- or at least their differences --- accurately capture the differences in skill level between teams (which is no small assumption). We will make this aassumption for the remainder of this paper; while our Elo system might not be completely accurate, it could be improved with more time and the incorporation of more data (see \autoref{nextSteps}).
@@ -158,7 +170,6 @@ There are several things we would like to do if we had the time and resources to
 
 \newpage
 
-\section{AI Use Report}
-ChatGPT was used to fix bugs in data processing code as well as for preliminary exploration on the problem. The only ideas we used from this preliminaryexploration were those which we then found true sources for and cited in the paper. 
+\input{AI Use Report.tex}
 
 \end{document}
